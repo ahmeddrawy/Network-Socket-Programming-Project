@@ -18,11 +18,11 @@ public class GameServer {
         System.out.println("Server Started");
         try {
             int cnt = 0 ;
-            mServer = new ServerSocket(port);
+            mServer = new ServerSocket(port); /// to listen on
             while(true){
                 cnt++;
                 Socket mSocket = new Socket();
-                mSocket = mServer.accept();
+                mSocket  =mServer.accept();
                 ServerClientThread ComingClient = new ServerClientThread(mSocket , cnt);
                 System.out.println("Client "+cnt + " connected");
                 if(WaitingClient == null){
