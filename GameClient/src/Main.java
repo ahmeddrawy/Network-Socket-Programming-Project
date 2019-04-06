@@ -1,8 +1,7 @@
-import javax.swing.*;
-
 public class Main {
 
     public static void main(String[] args) {
-        new ServerConnectGUI();
+        // Start Connection Page
+        new ConnectToServerGUI();
     }
 }

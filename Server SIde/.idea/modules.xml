@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MemoryMatchClient.iml" filepath="$PROJECT_DIR$/MemoryMatchClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Trials.iml" filepath="$PROJECT_DIR$/Trials.iml" />
     </modules>
   </component>
 </project>
