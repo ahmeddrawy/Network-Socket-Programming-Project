@@ -38,7 +38,7 @@ public class PlayGameGUI extends JFrame {
     PlayGameGUI(ServerConnection conn){
         this.conn = conn;
         //Outer Frame
-        BackgroundPanel frame = new BackgroundPanel("plaid.jpg", BackgroundPanel.TILED);
+        BackgroundPanel frame = new BackgroundPanel("assets/plaid.jpg", BackgroundPanel.TILED);
         frame.setLayout(new BoxLayout(frame, BoxLayout.PAGE_AXIS));// Vertical Layout
         frame.setBorder(new EmptyBorder(4, 4, 4, 4));// Padding to panel
 
@@ -111,8 +111,12 @@ public class PlayGameGUI extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            // TODO
+            closeGame();
         }
+    }
+    
+    void closeGame(){
+        this.dispose();
     }
 
     void handleDisconnection(){
@@ -128,7 +132,7 @@ public class PlayGameGUI extends JFrame {
             this.setIcon(defaultImage);
             this.setDisabledIcon(defaultImage);
             String filename = String.format("%03d", imageNumber) + ".png";
-            Image img = new ImageIcon(getClass().getResource(filename)).getImage();
+            Image img = new ImageIcon(getClass().getResource("assets/" + filename)).getImage();
             img = img.getScaledInstance(buttonSideLength, buttonSideLength,  java.awt.Image.SCALE_SMOOTH);
             this.image = new ImageIcon(img);
             this.addActionListener(this);
@@ -179,7 +183,7 @@ public class PlayGameGUI extends JFrame {
             cardsPanel.setLayout(new GridLayout(width, height, 10, 10));
             buttonSideLength = (500 - (10 * (width - 1))) / width;
             // Setup default Image
-            Image tmp = new ImageIcon(this.getClass().getResource("star.png")).getImage();
+            Image tmp = new ImageIcon(this.getClass().getResource("assets/star.png")).getImage();
             tmp = tmp.getScaledInstance(buttonSideLength, buttonSideLength,  java.awt.Image.SCALE_SMOOTH);
             defaultImage = new ImageIcon(tmp);
             for(int i = 0; i < width * height; ++i){
@@ -236,7 +240,13 @@ public class PlayGameGUI extends JFrame {
             }else{
                 turn_detector.setText("Tie ^o^");
             }
-            new ConnectToServerGUI();
+            Thread t = new Thread(){
+                public void run(){
+                    new ConnectToServerGUI();
+                }
+            };
+            t.start();
+            
         }else if(action.equals("DISCONNECTED_PLAYER")){
            handleDisconnection();
         }
