@@ -23,14 +23,17 @@ public class MemoryGame {
     private int Player1_score = 0;
     private int Player2_score = 0 ;
     private int GameLEVEL = -1;
+    JSONObject TRUE_TURN = new JSONObject();
+    JSONObject FALSE_TURN = new JSONObject();
+    JSONObject Disconnected = new JSONObject();
     MemoryGame(ServerClientThread p1 , ServerClientThread p2 , int GameLevel ){
         Player1 = p1;
         Player2 = p2;
         GameLEVEL = GameLevel;
 
         Start();    /// todo check if this removed
-        System.out.println("level " +GameLEVEL);    /// todo remove this
         shuffleGRID();
+        IntializeJsonObjects();
         playing();
     }
     MemoryGame(){/// todo
@@ -44,32 +47,28 @@ public class MemoryGame {
         Player1.SendToclient(GridSetupObj.toString());  /// SENDING THE GRID TO BOTH
         Player2.SendToclient(GridSetupObj.toString());
     }
-    void playing(){
-        boolean Finished = false;   /// todo
-        SendGridConfigurationToClients();
-        JSONObject TRUE_TURN = new JSONObject();
-        JSONObject FALSE_TURN = new JSONObject();
+    void CheckDisconnection(){
+        if(!Player1.connected){
+            Player2.SendToclient(Disconnected.toString());
+        }
+        else if(!Player2.connected) {
+            Player1.SendToclient(Disconnected.toString());
+        }
+    }
+    void IntializeJsonObjects(){
         TRUE_TURN.put("TURN",true);
         TRUE_TURN.put("ACTION","SET_TURN");
         FALSE_TURN.put("TURN",false);
         FALSE_TURN.put("ACTION","SET_TURN");
-
-
+        Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
+    }
+    void playing(){
+        boolean Finished = false;   /// todo
+        CheckDisconnection();
+        SendGridConfigurationToClients();
         int cnt = -1 ;
         while(!Finished ){
-            JSONObject Disconnected =new JSONObject();
-            Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
-            if(!Player1.connected){
-                Player2.SendToclient(Disconnected.toString());
-                Finished = true;
-                break;
-            }
-            else if(!Player2.connected) {
-                Player1.SendToclient(Disconnected.toString());
-                Finished = true;
-                break;
-            }
-
+            CheckDisconnection();
             cnt+=1;
             int position1 = 0 , position2 = 0 ;
             if(cnt%2 == 0){ /// first player playing
@@ -121,18 +120,7 @@ public class MemoryGame {
     }
 
     public int GetRespondAndForward(boolean  PlayerTurn){
-        JSONObject Disconnected = new JSONObject();
-        Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
-        if(!Player1.connected){
-            Player2.SendToclient(Disconnected.toString());
-
-
-        }
-        else if(!Player2.connected) {
-            Player1.SendToclient(Disconnected.toString());
-
-        }
-
+        CheckDisconnection();
         String msg = null;
         JSONObject forward =null;
         int pos = 0 ;
