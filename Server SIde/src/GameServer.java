@@ -22,14 +22,13 @@ public class GameServer {
             mServer = new ServerSocket(port); /// to listen on
             while(true){
                 cnt++;
-                Socket mSocket = new Socket();
-                mSocket  =mServer.accept();
+                Socket mSocket = mServer.accept();
                 ServerClientThread ComingClient = new ServerClientThread(mSocket , cnt);
                 System.out.println("Client "+cnt + " connected");
                 String msg = ComingClient.getFromClient();
                 JSONObject NewPlayerJson  = new JSONObject(msg);
                 int LevelOfGame = 0 ; ///todo
-                if(NewPlayerJson.getString("ACTION").equals("NEW_PLAYER")){
+                if(NewPlayerJson.getString("ACTION").equals("NEW_PLAYER")) {
                     LevelOfGame = NewPlayerJson.getInt("MODE");
                 }
 

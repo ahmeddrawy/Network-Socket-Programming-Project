@@ -8,11 +8,7 @@ import java.util.Vector;
 import java.util.Collections;
 
 /*
-    todo  need to check the winner
-    todo check the other actions coming from the client
-    // TODO: 31/03/19 test with multiple games
-    // TODO: 02/04/19 take care of the exceptions
-    todo names
+     todo check the other actions coming from the client
 
  */
 public class MemoryGame {
@@ -47,21 +43,7 @@ public class MemoryGame {
         Player1.SendToclient(GridSetupObj.toString());  /// SENDING THE GRID TO BOTH
         Player2.SendToclient(GridSetupObj.toString());
     }
-    void CheckDisconnection(){
-        if(!Player1.connected){
-            Player2.SendToclient(Disconnected.toString());
-        }
-        else if(!Player2.connected) {
-            Player1.SendToclient(Disconnected.toString());
-        }
-    }
-    void IntializeJsonObjects(){
-        TRUE_TURN.put("TURN",true);
-        TRUE_TURN.put("ACTION","SET_TURN");
-        FALSE_TURN.put("TURN",false);
-        FALSE_TURN.put("ACTION","SET_TURN");
-        Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
-    }
+
     void playing(){
         boolean Finished = false;   /// todo
         CheckDisconnection();
@@ -76,8 +58,10 @@ public class MemoryGame {
                 TRUE_TURN.put("NAME_PLAYER_2" , Player2.NameOfClient);
                 FALSE_TURN.put("NAME_PLAYER_1" , Player2.NameOfClient);
                 FALSE_TURN.put("NAME_PLAYER_2" , Player1.NameOfClient);
+                CheckDisconnection();
                 Player1.SendToclient(TRUE_TURN.toString());
                 Player2.SendToclient(FALSE_TURN.toString());
+                CheckDisconnection();
                  position1 = GetRespondAndForward(true);
                  position2 = GetRespondAndForward(true);
                  CheckTwoCells(position1 , position2 , true);
@@ -90,6 +74,7 @@ public class MemoryGame {
                      Player2.SendToclient(FinishGame.toString());
 
                  }
+                 CheckDisconnection();
 
             }
             else { /// second player playing
@@ -98,11 +83,13 @@ public class MemoryGame {
                 TRUE_TURN.put("NAME_PLAYER_2" , Player1.NameOfClient);
                 FALSE_TURN.put("NAME_PLAYER_1" , Player1.NameOfClient);
                 FALSE_TURN.put("NAME_PLAYER_2" , Player2.NameOfClient);
+                CheckDisconnection();
                 Player1.SendToclient(FALSE_TURN.toString());
                 Player2.SendToclient(TRUE_TURN.toString());
                 position1 = GetRespondAndForward(false);
                 position2 = GetRespondAndForward(false);    /// geting the action from the user and forwaring it back to the other player
                 CheckTwoCells(position1 , position2, false);
+                CheckDisconnection();
                 if(!checkGRID()){
                     System.out.println("FINISHED GAME");
                     Finished = true;
@@ -114,14 +101,14 @@ public class MemoryGame {
                 }
 
             }
+            CheckDisconnection();
         }
 
 
     }
-
-    public int GetRespondAndForward(boolean  PlayerTurn){
+    public int GetRespondAndForward(boolean  PlayerTurn){ /// handle the disconnection
         CheckDisconnection();
-        String msg = null;
+         String msg = null;
         JSONObject forward =null;
         int pos = 0 ;
         try {
@@ -129,6 +116,11 @@ public class MemoryGame {
                 msg = Player1.getFromClient();
                 forward = SetupGameObjConstruct(msg);
 //                System.out.println(forward);
+                if(forward == Disconnected){
+                    Player1.connected = false;
+                    CheckDisconnection();
+                    return  0 ;
+                }
                 pos = forward.getInt("POSITION"); /// todo check if the action is show_tile
 
                 Player2.SendToclient(forward.toString());
@@ -136,6 +128,11 @@ public class MemoryGame {
             } else {
                 msg = Player2.getFromClient();
                 forward = SetupGameObjConstruct(msg);
+                if(forward == Disconnected){
+                    Player2.connected = false;
+                    CheckDisconnection();
+                    return  0 ;
+                }
                 System.out.println(forward);
                 pos = forward.getInt("POSITION");
                 Player1.SendToclient(forward.toString());
@@ -149,6 +146,7 @@ public class MemoryGame {
             Player2.stop();
         }
         return  pos;
+
 
     }
     public void CheckTwoCells(int pos1 , int pos2 , boolean player1_turn){
@@ -191,28 +189,19 @@ public class MemoryGame {
                 UpdatingScoreP1.put("NAME_PLAYER_2", Player2.NameOfClient);
 
             }
+            CheckDisconnection();
             Player1.SendToclient(FoundMatch.toString());
             Player2.SendToclient(FoundMatch.toString());
             Player1.SendToclient(UpdatingScoreP1.toString());
             Player2.SendToclient(UpdatingScoreP2.toString());
-
+            CheckDisconnection();
         }
     }
     public JSONObject SetupGameObjConstruct(String obj) {///todo take care of the rest of the cases
         JSONObject respond = null;
         String action = null;
         JSONObject forward = null;
-        JSONObject Disconnected = new JSONObject();
-        Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
-        if(!Player1.connected){
-            Player2.SendToclient(Disconnected.toString());
-//            return  null;
-
-        }
-        else if(!Player2.connected) {
-            Player1.SendToclient(Disconnected.toString());
-//            return  null;
-        }
+        CheckDisconnection();
         try {
             forward = new JSONObject();
             respond = new JSONObject(obj);
@@ -224,20 +213,19 @@ public class MemoryGame {
                 pos = respond.getInt("POSITION");
                 forward.put("POSITION", pos);
                 forward.put("ACTION", "RESPOND_PLAYER");
-            } else{
-
+            } else if(action.equals("BYE")){ ///  in case we have another action , but we don't
+                return Disconnected;
             }
 
         }
         catch (JSONException J){
             System.out.println("Exception from the the JSON object when constructing the Grid"+ J);
-            Player1.stop();
+            Player1.stop(); /// todo check those
             Player2.stop();
 
 
         }
-
-            return forward;
+        return forward;
     }
 
     public void shuffleGRID(){
@@ -282,8 +270,6 @@ public class MemoryGame {
         GridSetupObj.put("HEIGHT", h );
         GridSetupObj.put("GRID" , Grid);
         GridSetupObj.put("ACTION","SETUP_GAME");
-
-
     }
     public boolean checkGRID(){
         for(int i = 0 ; i < Grid.size() ; ++i){
@@ -293,5 +279,19 @@ public class MemoryGame {
         }
         return false;
     }
-
+    void CheckDisconnection(){
+        if(!Player1.connected){
+            Player2.SendToclient(Disconnected.toString());
+        }
+        else if(!Player2.connected) {
+            Player1.SendToclient(Disconnected.toString());
+        }
+    }
+    void IntializeJsonObjects(){
+        TRUE_TURN.put("TURN",true);
+        TRUE_TURN.put("ACTION","SET_TURN");
+        FALSE_TURN.put("TURN",false);
+        FALSE_TURN.put("ACTION","SET_TURN");
+        Disconnected.put("ACTION","DISCONNECTED_PLAYER" );
+    }
 }

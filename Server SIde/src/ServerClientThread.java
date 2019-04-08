@@ -27,7 +27,8 @@ public class ServerClientThread extends Thread{
     public  String getFromClient(){
         String ret = "haven't got anything";
         try {
-            DataInputStream Inserver = new DataInputStream(ClientSocket.getInputStream());
+            DataInputStream Inserver =
+                    new DataInputStream(ClientSocket.getInputStream());
             ret = Inserver.readUTF();
 
             System.out.println(ret);
